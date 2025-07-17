@@ -1,0 +1,1153 @@
+import React, { useState } from 'react';
+import { Server, HardDrive, Network, Settings, CheckCircle, AlertCircle, Info, BarChart3, Save, Download } from 'lucide-react';
+
+const AzureLocalSizer = () => {
+  const [nodes, setNodes] = useState(2);
+  const [drives, setDrives] = useState(4);
+  const [memoryDimms, setMemoryDimms] = useState(8);
+  const [networkType, setNetworkType] = useState('switched');
+  const [switchedConfig, setSwitchedConfig] = useState('converged');
+  const [storageType, setStorageType] = useState('3-way');
+  const [selectedProcessor, setSelectedProcessor] = useState(0);
+  const [selectedMemory, setSelectedMemory] = useState(0);
+  const [serverModel, setServerModel] = useState('ax-660');
+  const [driveType, setDriveType] = useState('ssd');
+  const [selectedSSD, setSelectedSSD] = useState(0);
+  const [selectedNVMe, setSelectedNVMe] = useState(0);
+  const [networkSpeed, setNetworkSpeed] = useState('25Gbps');
+  const [switchModel, setSwitchModel] = useState('s-5224');
+  const [activeSection, setActiveSection] = useState('nodes');
+  const [savedConfigs, setSavedConfigs] = useState([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [configName, setConfigName] = useState('');
+
+  const processors = [
+    { name: "Intel Xeon Silver 4509Y", cores: "8C/16T", speed: "2.6GHz" },
+    { name: "Intel Xeon Gold 5415", cores: "8C/16T", speed: "2.9GHz" },
+    { name: "Intel Xeon Gold 6434", cores: "8C/16T", speed: "3.7GHz" },
+    { name: "Intel Xeon Gold 6534", cores: "8C/16T", speed: "3.9GHz" },
+    { name: "Intel Xeon Silver 4410Y", cores: "12C/24T", speed: "2.0GHz" },
+    { name: "Intel Xeon Silver 4510", cores: "12C/24T", speed: "2.4GHz" },
+    { name: "Intel Xeon Silver 4514Y", cores: "16C/32T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 5416S", cores: "16C/32T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 6426Y", cores: "16C/32T", speed: "2.5GHz" },
+    { name: "Intel Xeon Gold 6526Y", cores: "16C/32T", speed: "2.8GHz" },
+    { name: "Intel Xeon Gold 6444Y", cores: "16C/32T", speed: "3.6GHz" },
+    { name: "Intel Xeon Silver 4416+", cores: "20C/40T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 5418N", cores: "24C/48T", speed: "1.8GHz" },
+    { name: "Intel Xeon Gold 5418Y", cores: "24C/48T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 6442Y", cores: "24C/48T", speed: "2.6GHz" },
+    { name: "Intel Xeon Gold 6542Y", cores: "24C/48T", speed: "2.9GHz" },
+    { name: "Intel Xeon Gold 5420+", cores: "28C/56T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 6428N", cores: "32C/64T", speed: "1.8GHz" },
+    { name: "Intel Xeon Gold 6438N", cores: "32C/64T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 6438Y+", cores: "32C/64T", speed: "2.0GHz" },
+    { name: "Intel Xeon Gold 6430", cores: "32C/64T", speed: "2.1GHz" },
+    { name: "Intel Xeon Gold 6448Y", cores: "32C/64T", speed: "2.1GHz" },
+    { name: "Intel Xeon Gold 6438M", cores: "32C/64T", speed: "2.2GHz" },
+    { name: "Intel Xeon Gold 6454S", cores: "32C/64T", speed: "2.2GHz" },
+    { name: "Intel Xeon Gold 6548Y+", cores: "32C/64T", speed: "2.5GHz" },
+    { name: "Intel Xeon Gold 6548N", cores: "32C/64T", speed: "2.8GHz" },
+    { name: "Intel Xeon Platinum 8462Y+", cores: "32C/64T", speed: "2.8GHz" },
+    { name: "Intel Xeon Platinum 8562Y+", cores: "32C/64T", speed: "2.8GHz" },
+    { name: "Intel Xeon Platinum 8452Y", cores: "36C/72T", speed: "2.0GHz" },
+    { name: "Intel Xeon Platinum 8460Y+", cores: "40C/80T", speed: "2.0GHz" },
+    { name: "Intel Xeon Platinum 8468", cores: "48C/96T", speed: "2.1GHz" },
+    { name: "Intel Xeon Platinum 8568Y+", cores: "48C/96T", speed: "2.3GHz" },
+    { name: "Intel Xeon Platinum 8470N", cores: "52C/104T", speed: "1.7GHz" },
+    { name: "Intel Xeon Platinum 8470", cores: "52C/104T", speed: "2.0GHz" },
+    { name: "Intel Xeon Platinum 8480+", cores: "56C/112T", speed: "2.0GHz" },
+    { name: "Intel Xeon Platinum 8580", cores: "60C/120T", speed: "2.0GHz" },
+    { name: "Intel Xeon Platinum 8592+", cores: "64C/128T", speed: "1.9GHz" }
+  ];
+
+  const memoryOptions = [
+    { size: "16GB", speed: "5600MT/s", type: "RDIMM Single Rank" },
+    { size: "32GB", speed: "5600MT/s", type: "RDIMM Dual Rank" },
+    { size: "64GB", speed: "5600MT/s", type: "RDIMM Dual Rank" },
+    { size: "96GB", speed: "5600MT/s", type: "RDIMM Dual Rank" },
+    { size: "128GB", speed: "5600MT/s", type: "RDIMM Dual Rank" }
+  ];
+
+  const ssdOptions = [
+    { size: "800GB", type: "SSD SAS Mixed Use", speed: "24Gbps" },
+    { size: "960GB", type: "SSD vSAS Mixed Use", speed: "12Gbps" },
+    { size: "1.6TB", type: "SSD SAS Mixed Use", speed: "24Gbps" },
+    { size: "1.92TB", type: "SSD SAS Read Intensive", speed: "24Gbps" },
+    { size: "3.2TB", type: "SSD SAS Mixed Use", speed: "24Gbps" },
+    { size: "3.84TB", type: "SSD SAS Read Intensive", speed: "24Gbps" },
+    { size: "7.68TB", type: "SSD SAS Read Intensive", speed: "24Gbps" }
+  ];
+
+  const nvmeOptions = [
+    { size: "800GB", type: "NVMe SAS Mixed Use", speed: "24Gbps" },
+    { size: "960GB", type: "NVMe Data Center", speed: "Gen4" },
+    { size: "1.6TB", type: "NVMe Enterprise Mixed Use", speed: "Gen4" },
+    { size: "1.92TB", type: "NVMe Enterprise Read Intensive", speed: "Gen4" },
+    { size: "3.2TB", type: "NVMe Enterprise Mixed Use", speed: "Gen4" },
+    { size: "3.84TB", type: "NVMe Enterprise Read Intensive", speed: "Gen4" },
+    { size: "6.4TB", type: "NVMe Enterprise Mixed Use", speed: "Gen4" },
+    { size: "7.68TB", type: "NVMe Enterprise Read Intensive", speed: "Gen4" },
+    { size: "15.36TB", type: "NVMe Enterprise Read Intensive", speed: "Gen4" }
+  ];
+
+  const navigationSections = [
+    { id: 'nodes', label: 'Node Configuration', icon: Server, color: 'blue' },
+    { id: 'storage', label: 'Storage Configuration', icon: HardDrive, color: 'green' },
+    { id: 'network', label: 'Network Configuration', icon: Network, color: 'purple' },
+    { id: 'summary', label: 'Summary & Visualization', icon: BarChart3, color: 'orange' }
+  ];
+
+  const getMaxDrives = () => serverModel === 'ax-660' ? 10 : 24;
+
+  const calculateStorageCapacity = () => {
+    const selectedDriveOption = driveType === 'ssd' ? ssdOptions[selectedSSD] : nvmeOptions[selectedNVMe];
+    const selectedDriveSize = parseFloat(selectedDriveOption.size);
+    const isGBDrive = selectedDriveOption.size.includes('GB');
+    const driveSizeInTB = isGBDrive ? selectedDriveSize / 1000 : selectedDriveSize;
+    const advertisedRawCapacity = driveSizeInTB * drives * nodes;
+    const totalRawCapacity = advertisedRawCapacity;
+    
+    let usablePercentage = 0.5;
+    if (storageType === '3-way') usablePercentage = 0.333;
+    
+    const reserveDrives = Math.min(nodes, 4);
+    const reserveCapacity = driveSizeInTB * reserveDrives;
+    const availableCapacity = totalRawCapacity - reserveCapacity;
+    const usableCapacity = availableCapacity * usablePercentage;
+    const resilientCapacity = availableCapacity - usableCapacity;
+    const tbToTibFactor = 0.9094947;
+    
+    return {
+      advertisedRaw: advertisedRawCapacity,
+      totalRaw: totalRawCapacity,
+      usable: usableCapacity,
+      resilient: resilientCapacity,
+      reserve: reserveCapacity,
+      advertisedRawTiB: advertisedRawCapacity * tbToTibFactor,
+      totalRawTiB: totalRawCapacity * tbToTibFactor,
+      usableTiB: usableCapacity * tbToTibFactor,
+      resilientTiB: resilientCapacity * tbToTibFactor,
+      reserveTiB: reserveCapacity * tbToTibFactor,
+      isGB: isGBDrive
+    };
+  };
+
+  const storage = calculateStorageCapacity();
+  
+  const validations = {
+    nodes: nodes >= 1 && nodes <= 16,
+    drives: drives >= 2 && drives <= getMaxDrives(),
+    memory: memoryDimms >= 8 && memoryDimms <= 32 && memoryDimms % 8 === 0,
+    switchless: networkType === 'switchless' ? nodes <= 4 : true,
+    singleNodeMirror: nodes === 1 ? storageType === '2-way' : true,
+    threeWayMirror: nodes >= 3 || storageType === '2-way'
+  };
+
+  React.useEffect(() => {
+    if (nodes < 3 && storageType === '3-way') {
+      setStorageType('2-way');
+    }
+  }, [nodes, storageType]);
+
+  React.useEffect(() => {
+    const maxDrives = getMaxDrives();
+    if (drives > maxDrives) {
+      setDrives(maxDrives);
+    }
+  }, [serverModel, drives]);
+
+  const allValid = Object.values(validations).every(v => v);
+
+  const getCurrentConfig = () => ({
+    nodes,
+    drives,
+    memoryDimms,
+    networkType,
+    switchedConfig,
+    storageType,
+    selectedProcessor,
+    selectedMemory,
+    serverModel,
+    driveType,
+    selectedSSD,
+    selectedNVMe,
+    networkSpeed,
+    switchModel,
+    timestamp: new Date().toISOString()
+  });
+
+  const saveConfiguration = () => {
+    if (!configName.trim()) return;
+    
+    const config = {
+      name: configName.trim(),
+      ...getCurrentConfig()
+    };
+    
+    setSavedConfigs(prev => [...prev, config]);
+    setConfigName('');
+    setShowSaveDialog(false);
+  };
+
+  const loadConfiguration = (config) => {
+    setNodes(config.nodes);
+    setDrives(config.drives);
+    setMemoryDimms(config.memoryDimms);
+    setNetworkType(config.networkType);
+    setSwitchedConfig(config.switchedConfig);
+    setStorageType(config.storageType);
+    setSelectedProcessor(config.selectedProcessor);
+    setSelectedMemory(config.selectedMemory);
+    setServerModel(config.serverModel);
+    setDriveType(config.driveType);
+    setSelectedSSD(config.selectedSSD);
+    setSelectedNVMe(config.selectedNVMe);
+    setNetworkSpeed(config.networkSpeed);
+    setSwitchModel(config.switchModel);
+    setShowLoadDialog(false);
+  };
+
+  const deleteConfiguration = (index) => {
+    setSavedConfigs(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const exportConfiguration = () => {
+    const config = getCurrentConfig();
+    const summary = generateConfigSummary(config);
+    
+    const blob = new Blob([summary], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `azure-local-config-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const generateConfigSummary = (config) => {
+    const storage = calculateStorageCapacity();
+    const processor = processors[config.selectedProcessor];
+    const memory = memoryOptions[config.selectedMemory];
+    const drive = config.driveType === 'ssd' ? ssdOptions[config.selectedSSD] : nvmeOptions[config.selectedNVMe];
+    
+    return `
+AZURE LOCAL CLUSTER CONFIGURATION
+Generated: ${new Date().toLocaleDateString()}
+
+CLUSTER OVERVIEW
+================
+Nodes: ${config.nodes}
+Server Model: ${config.serverModel.toUpperCase()}
+Storage Resiliency: ${config.storageType === '2-way' ? '2-Way Mirror' : '3-Way Mirror'}
+Network: ${config.networkType} @ ${config.networkSpeed}
+
+SINGLE NODE SPECIFICATIONS
+=========================
+Processors: 2x ${processor.name}
+Cores/Threads: ${processor.cores} @ ${processor.speed}
+Memory: ${config.memoryDimms} DIMMs x ${memory.size} = ${config.memoryDimms * parseInt(memory.size)}GB
+Storage: ${config.drives}x ${drive.size} ${drive.type}
+
+TOTAL CLUSTER RESOURCES
+======================
+Total Nodes: ${config.nodes}
+Total Processors: ${config.nodes * 2}
+Total Cores: ${config.nodes * 2 * parseInt(processor.cores.split('C')[0])}
+Total GHz: ${(config.nodes * 2 * parseInt(processor.cores.split('C')[0]) * parseFloat(processor.speed)).toFixed(1)} GHz
+Total Memory: ${config.nodes * config.memoryDimms * parseInt(memory.size)}GB
+Total Storage Drives: ${config.nodes * config.drives}
+
+STORAGE CAPACITY
+===============
+Raw Capacity: ${storage.isGB ? `${(storage.totalRaw * 1000).toFixed(0)} GB` : `${storage.totalRaw.toFixed(1)} TB`}
+Usable Capacity: ${storage.isGB ? `${(storage.usable * 1000).toFixed(0)} GB` : `${storage.usable.toFixed(1)} TB`}
+Resilient Capacity: ${storage.isGB ? `${(storage.resilient * 1000).toFixed(0)} GB` : `${storage.resilient.toFixed(1)} TB`}
+Reserve Capacity: ${storage.isGB ? `${(storage.reserve * 1000).toFixed(0)} GB` : `${storage.reserve.toFixed(1)} TB`}
+
+NETWORK CONFIGURATION
+====================
+Type: ${config.networkType}
+Speed: ${config.networkSpeed}
+${config.networkType === 'switched' ? `Switch Model: ${config.switchModel.toUpperCase()}` : ''}
+${config.networkType === 'switched' ? `Configuration: ${config.switchedConfig}` : ''}
+`.trim();
+  };
+
+  const getColorClasses = (color, isActive = false) => {
+    const colors = {
+      blue: isActive ? 'bg-blue-600 text-white' : 'text-blue-400 hover:bg-blue-900/20',
+      green: isActive ? 'bg-green-600 text-white' : 'text-green-400 hover:bg-green-900/20',
+      purple: isActive ? 'bg-purple-600 text-white' : 'text-purple-400 hover:bg-purple-900/20',
+      orange: isActive ? 'bg-orange-600 text-white' : 'text-orange-400 hover:bg-orange-900/20'
+    };
+    return colors[color] || colors.blue;
+  };
+
+  const renderNodeConfiguration = () => (
+    <div className="bg-gray-800 rounded-lg border border-gray-700">
+      <div className="border-b border-gray-700 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+            <Server className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">Node Configuration</h2>
+        </div>
+      </div>
+      <div className="p-6 space-y-6">
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Number of Nodes</label>
+          <input
+            type="range"
+            min="1"
+            max="16"
+            value={nodes}
+            onChange={(e) => setNodes(parseInt(e.target.value))}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>1</span>
+            <span className="font-medium text-blue-400">{nodes} nodes</span>
+            <span>16</span>
+          </div>
+          {!validations.nodes && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>Nodes must be between 1 and 16</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Server Model</label>
+          <select
+            value={serverModel}
+            onChange={(e) => setServerModel(e.target.value)}
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+          >
+            <option value="ax-660">AX-660 (1U Server)</option>
+            <option value="ax-760">AX-760 (2U Server)</option>
+          </select>
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Processor (Always Qty 2)</label>
+          <select
+            value={selectedProcessor}
+            onChange={(e) => setSelectedProcessor(parseInt(e.target.value))}
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+          >
+            {processors.map((proc, index) => (
+              <option key={index} value={index}>
+                {proc.name} - {proc.cores} @ {proc.speed}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Memory per DIMM</label>
+          <select
+            value={selectedMemory}
+            onChange={(e) => setSelectedMemory(parseInt(e.target.value))}
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+          >
+            {memoryOptions.map((mem, index) => (
+              <option key={index} value={index}>
+                {mem.size} {mem.type} @ {mem.speed}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Memory DIMMs (Sets of 8)</label>
+          <input
+            type="range"
+            min="8"
+            max="32"
+            step="8"
+            value={memoryDimms}
+            onChange={(e) => setMemoryDimms(parseInt(e.target.value))}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>8</span>
+            <span className="font-medium text-blue-400">{memoryDimms} DIMMs</span>
+            <span>32</span>
+          </div>
+          {!validations.memory && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>Memory must be in balanced sets of 8 DIMMs</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStorageConfiguration = () => (
+    <div className="bg-gray-800 rounded-lg border border-gray-700">
+      <div className="border-b border-gray-700 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center">
+            <HardDrive className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">Storage Configuration</h2>
+        </div>
+      </div>
+      <div className="p-6 space-y-6">
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Number of Drives</label>
+          <input
+            type="range"
+            min="2"
+            max={getMaxDrives()}
+            value={drives}
+            onChange={(e) => setDrives(parseInt(e.target.value))}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>2</span>
+            <span className="font-medium text-blue-400">{drives} drives</span>
+            <span>{getMaxDrives()}</span>
+          </div>
+          {!validations.drives && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>Drives must be between 2 and {getMaxDrives()} for {serverModel.toUpperCase()}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Drive Type</label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setDriveType('ssd')}
+              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                driveType === 'ssd' 
+                  ? 'bg-blue-600 border-blue-500 text-white' 
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              SSD
+            </button>
+            <button
+              onClick={() => setDriveType('nvme')}
+              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                driveType === 'nvme' 
+                  ? 'bg-blue-600 border-blue-500 text-white' 
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              NVMe
+            </button>
+          </div>
+        </div>
+
+        {driveType === 'ssd' ? (
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-300">SSD Type</label>
+            <select
+              value={selectedSSD}
+              onChange={(e) => setSelectedSSD(parseInt(e.target.value))}
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+            >
+              {ssdOptions.map((ssd, index) => (
+                <option key={index} value={index}>
+                  {ssd.size} {ssd.type} @ {ssd.speed}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-300">NVMe Type</label>
+            <select
+              value={selectedNVMe}
+              onChange={(e) => setSelectedNVMe(parseInt(e.target.value))}
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+            >
+              {nvmeOptions.map((nvme, index) => (
+                <option key={index} value={index}>
+                  {nvme.size} {nvme.type} @ {nvme.speed}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Storage Resiliency Type</label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setStorageType('2-way')}
+              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                storageType === '2-way' 
+                  ? 'bg-blue-600 border-blue-500 text-white' 
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              2-Way Mirror
+            </button>
+            <button
+              onClick={() => setStorageType('3-way')}
+              disabled={nodes < 3}
+              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                storageType === '3-way' 
+                  ? 'bg-blue-600 border-blue-500 text-white' 
+                  : nodes < 3 
+                    ? 'bg-gray-800 border-gray-600 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              3-Way Mirror
+            </button>
+          </div>
+          {nodes < 3 && (
+            <div className="flex items-center gap-2 text-amber-400 text-sm">
+              <Info className="w-4 h-4" />
+              <span>3-Way Mirror requires 3+ nodes (currently {nodes} node{nodes === 1 ? '' : 's'})</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderNetworkConfiguration = () => (
+    <div className="bg-gray-800 rounded-lg border border-gray-700">
+      <div className="border-b border-gray-700 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center">
+            <Network className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">Network Configuration</h2>
+        </div>
+      </div>
+      <div className="p-6 space-y-6">
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Network Type</label>
+          <div className="grid grid-cols-1 gap-4">
+            <button
+              onClick={() => setNetworkType('switched')}
+              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                networkType === 'switched' 
+                  ? 'bg-blue-600 border-blue-500 text-white' 
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Switched
+            </button>
+            <button
+              onClick={() => setNetworkType('switchless')}
+              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                networkType === 'switchless' 
+                  ? 'bg-blue-600 border-blue-500 text-white' 
+                  : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Switchless (Max 4 nodes)
+            </button>
+          </div>
+          {!validations.switchless && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>Switchless configuration limited to 4 nodes</span>
+            </div>
+          )}
+        </div>
+
+        {networkType === 'switched' && (
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-300">Switched Configuration</label>
+            <select
+              value={switchedConfig}
+              onChange={(e) => setSwitchedConfig(e.target.value)}
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+            >
+              <option value="converged">Converged Network</option>
+              <option value="non-converged">Non-Converged (Segmented)</option>
+            </select>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">Network Speed</label>
+          <select
+            value={networkSpeed}
+            onChange={(e) => setNetworkSpeed(e.target.value)}
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+          >
+            <option value="10Gbps">10 Gbps</option>
+            <option value="25Gbps">25 Gbps</option>
+            <option value="40Gbps">40 Gbps</option>
+            <option value="100Gbps">100 Gbps</option>
+          </select>
+        </div>
+
+        {networkType === 'switched' && (
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-300">Switch Model</label>
+            <select
+              value={switchModel}
+              onChange={(e) => setSwitchModel(e.target.value)}
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+            >
+              <option value="s-5212">S-5212 (12 ports)</option>
+              <option value="s-5224">S-5224 (24 ports)</option>
+              <option value="s-5248">S-5248 (48 ports)</option>
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSummaryAndVisualization = () => (
+    <div className="space-y-4">
+      {/* Compact Configuration Summary */}
+      <div className="bg-gray-800 rounded-lg border border-gray-700">
+        <div className="border-b border-gray-700 p-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-orange-600 rounded flex items-center justify-center">
+              <Settings className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-lg font-semibold text-white">Configuration Summary</h2>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-6">
+            {/* Node Specifications */}
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3">Single Node Specifications</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Server Model</span>
+                  <span className="text-blue-400 font-medium text-sm">{serverModel.toUpperCase()}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Processors</span>
+                  <span className="text-blue-400 font-medium text-sm">2</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Processor Model</span>
+                  <span className="text-blue-400 font-medium text-xs">{processors[selectedProcessor].name}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Cores/Threads</span>
+                  <span className="text-blue-400 font-medium text-sm">{processors[selectedProcessor].cores}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Memory</span>
+                  <span className="text-blue-400 font-medium text-sm">{memoryDimms * parseInt(memoryOptions[selectedMemory].size)}GB</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Storage Drives</span>
+                  <span className="text-blue-400 font-medium text-sm">{drives}</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-300 text-sm">Drive Capacity</span>
+                  <span className="text-blue-400 font-medium text-sm">
+                    {driveType === 'ssd' ? ssdOptions[selectedSSD].size : nvmeOptions[selectedNVMe].size}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cluster Specifications */}
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-3">Total Cluster Specifications</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Total Nodes</span>
+                  <span className="text-green-400 font-medium text-sm">{nodes}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Total Processors</span>
+                  <span className="text-green-400 font-medium text-sm">{nodes * 2}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Total Cores</span>
+                  <span className="text-green-400 font-medium text-sm">{nodes * 2 * parseInt(processors[selectedProcessor].cores.split('C')[0])}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Total GHz</span>
+                  <span className="text-green-400 font-medium text-sm">{(nodes * 2 * parseInt(processors[selectedProcessor].cores.split('C')[0]) * parseFloat(processors[selectedProcessor].speed)).toFixed(1)} GHz</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Total Memory</span>
+                  <span className="text-green-400 font-medium text-sm">{nodes * memoryDimms * parseInt(memoryOptions[selectedMemory].size)}GB</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Total Storage Drives</span>
+                  <span className="text-green-400 font-medium text-sm">{nodes * drives}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Storage Resiliency</span>
+                  <span className="text-green-400 font-medium text-sm">{storageType === '2-way' ? '2-Way Mirror' : '3-Way Mirror'}</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-300 text-sm">Network Type</span>
+                  <span className="text-green-400 font-medium text-sm">{networkType === 'switched' ? 'Switched' : 'Switchless'} @ {networkSpeed}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Storage and Network Visualizations */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Storage Distribution with Capacity Details */}
+        <div className="bg-gray-800 rounded-lg border border-gray-700">
+          <div className="border-b border-gray-700 p-3">
+            <h2 className="text-lg font-semibold text-white">Storage Distribution</h2>
+          </div>
+          <div className="p-4">
+            {/* Storage Capacity Details */}
+            <div className="mb-4">
+              <div className="space-y-2">
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Raw Capacity</span>
+                  <span className="text-white font-medium text-sm">
+                    {storage.isGB ? `${(storage.totalRaw * 1000).toFixed(0)} GB` : `${storage.totalRaw.toFixed(1)} TB`}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Usable Capacity</span>
+                  <span className="text-green-400 font-medium text-sm">
+                    {storage.isGB ? `${(storage.usable * 1000).toFixed(0)} GB` : `${storage.usable.toFixed(1)} TB`}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-700">
+                  <span className="text-gray-300 text-sm">Resilient Capacity</span>
+                  <span className="text-blue-400 font-medium text-sm">
+                    {storage.isGB ? `${(storage.resilient * 1000).toFixed(0)} GB` : `${storage.resilient.toFixed(1)} TB`}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-300 text-sm">Reserve Capacity</span>
+                  <span className="text-purple-400 font-medium text-sm">
+                    {storage.isGB ? `${(storage.reserve * 1000).toFixed(0)} GB` : `${storage.reserve.toFixed(1)} TB`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Storage Pie Chart */}
+            <div className="flex items-center gap-4">
+              <div className="relative w-32 h-32 flex-shrink-0">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                  {(() => {
+                    const total = storage?.totalRaw || 1;
+                    const usable = storage?.usable || 0;
+                    const resilient = storage?.resilient || 0;
+                    const reserve = storage?.reserve || 0;
+                    
+                    const usableAngle = (usable / total) * 360;
+                    const resilientAngle = (resilient / total) * 360;
+                    
+                    const radius = 80;
+                    const centerX = 100;
+                    const centerY = 100;
+                    
+                    const createPath = (startAngle, endAngle) => {
+                      const start = (startAngle * Math.PI) / 180;
+                      const end = (endAngle * Math.PI) / 180;
+                      
+                      const x1 = centerX + radius * Math.cos(start);
+                      const y1 = centerY + radius * Math.sin(start);
+                      const x2 = centerX + radius * Math.cos(end);
+                      const y2 = centerY + radius * Math.sin(end);
+                      
+                      const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+                      
+                      return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                    };
+                    
+                    return (
+                      <>
+                        <path d={createPath(0, usableAngle)} fill="#10b981" />
+                        <path d={createPath(usableAngle, usableAngle + resilientAngle)} fill="#3b82f6" />
+                        <path d={createPath(usableAngle + resilientAngle, 360)} fill="#8b5cf6" />
+                      </>
+                    );
+                  })()}
+                </svg>
+              </div>
+              
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <div className="text-sm">
+                    <div className="text-white font-medium">Usable</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                  <div className="text-sm">
+                    <div className="text-white font-medium">Resilient</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                  <div className="text-sm">
+                    <div className="text-white font-medium">Reserve</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Cluster Topology */}
+        <div className="bg-gray-800 rounded-lg border border-gray-700">
+          <div className="border-b border-gray-700 p-3">
+            <h2 className="text-lg font-semibold text-white">Cluster Topology</h2>
+          </div>
+          <div className="p-4">
+            <div className="bg-gray-900 rounded-lg p-4">
+              {networkType === 'switched' ? (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {Array.from({ length: Math.min(nodes, 8) }, (_, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className={`bg-gradient-to-br from-gray-700 to-gray-800 rounded border border-gray-600 flex items-center justify-center text-white text-xs ${
+                          serverModel === 'ax-660' ? 'w-12 h-4' : 'w-12 h-6'
+                        }`}>
+                          <span>N{i + 1}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {nodes > 8 && (
+                      <div className="text-gray-400 text-xs">+{nodes - 8}</div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-center gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded border border-gray-600 flex items-center justify-center text-white text-xs">
+                        SW1
+                      </div>
+                      <span className="text-xs text-gray-400 mt-1">{switchModel.toUpperCase()}</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded border border-gray-600 flex items-center justify-center text-white text-xs">
+                        SW2
+                      </div>
+                      <span className="text-xs text-gray-400 mt-1">{switchModel.toUpperCase()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center text-xs text-gray-400">
+                    {switchedConfig === 'converged' ? 'Converged' : 'Non-Converged'} @ {networkSpeed}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {Array.from({ length: nodes }, (_, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className={`bg-gradient-to-br from-gray-700 to-gray-800 rounded border border-gray-600 flex items-center justify-center text-white text-xs ${
+                          serverModel === 'ax-660' ? 'w-12 h-4' : 'w-12 h-6'
+                        }`}>
+                          <span>N{i + 1}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center text-xs text-gray-400">
+                    Direct connections @ {networkSpeed}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {!allValid && (
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg">
+          <div className="border-b border-red-700/50 p-3">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <h2 className="text-lg font-semibold text-red-200">Configuration Issues</h2>
+            </div>
+          </div>
+          <div className="p-3 space-y-2">
+            {!validations.nodes && (
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                <span>Nodes must be between 1 and 16</span>
+              </div>
+            )}
+            {!validations.drives && (
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                <span>Drives must be between 2 and {getMaxDrives()} for {serverModel.toUpperCase()}</span>
+              </div>
+            )}
+            {!validations.memory && (
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                <span>Memory must be in balanced sets of 8 DIMMs</span>
+              </div>
+            )}
+            {!validations.switchless && (
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                <span>Switchless configuration limited to 4 nodes</span>
+              </div>
+            )}
+            {!validations.singleNodeMirror && (
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                <span>Single node clusters must use 2-way mirror</span>
+              </div>
+            )}
+            {!validations.threeWayMirror && (
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                <span>3-way mirror requires at least 3 nodes</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderActiveSection = () => {
+    switch(activeSection) {
+      case 'nodes':
+        return renderNodeConfiguration();
+      case 'storage':
+        return renderStorageConfiguration();
+      case 'network':
+        return renderNetworkConfiguration();
+      case 'summary':
+        return renderSummaryAndVisualization();
+      default:
+        return renderNodeConfiguration();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+              <Server className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-white">Azure Local Cluster Sizing Tool</h1>
+              <p className="text-sm text-gray-400">Configure your Azure Local cluster hardware specifications</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSaveDialog(true)}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                Save Config
+              </button>
+              <button
+                onClick={() => setShowLoadDialog(true)}
+                disabled={savedConfigs.length === 0}
+                className="px-3 py-1.5 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+              >
+                Load Config
+              </button>
+              <button
+                onClick={exportConfiguration}
+                className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 transition-colors"
+              >
+                Export
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {allValid ? (
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="text-sm">Configuration Valid</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-amber-400">
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="text-sm">Configuration Issues</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex">
+        <div className="w-64 bg-gray-800 border-r border-gray-700 min-h-screen">
+          <div className="p-4">
+            <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">Configuration</h3>
+            <nav className="space-y-2">
+              {navigationSections.map((section) => {
+                const Icon = section.icon;
+                const isActive = activeSection === section.id;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      getColorClasses(section.color, isActive)
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {section.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="p-4 border-t border-gray-700">
+            <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Quick Summary</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Nodes</span>
+                <span className="text-green-400 font-medium">{nodes}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Total Cores</span>
+                <span className="text-green-400 font-medium">{nodes * 2 * parseInt(processors[selectedProcessor].cores.split('C')[0])}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Total GHz</span>
+                <span className="text-green-400 font-medium">{(nodes * 2 * parseInt(processors[selectedProcessor].cores.split('C')[0]) * parseFloat(processors[selectedProcessor].speed)).toFixed(1)} GHz</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Total Memory</span>
+                <span className="text-green-400 font-medium">{nodes * memoryDimms * parseInt(memoryOptions[selectedMemory].size)}GB</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Total Drives</span>
+                <span className="text-green-400 font-medium">{nodes * drives}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Usable Storage</span>
+                <span className="text-green-400 font-medium">
+                  {storage.isGB ? `${(storage.usable * 1000).toFixed(0)} GB` : `${storage.usable.toFixed(1)} TB`}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Resiliency</span>
+                <span className="text-blue-400 font-medium">{storageType === '2-way' ? '2-Way' : '3-Way'}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-300">Network</span>
+                <span className="text-purple-400 font-medium">{networkType} @ {networkSpeed}</span>
+              </div>
+            </div>
+          </div>
+
+          {savedConfigs.length > 0 && (
+            <div className="p-4 border-t border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">Saved Configs</h3>
+                <span className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">{savedConfigs.length}</span>
+              </div>
+              <p className="text-xs text-gray-500">Use 'Load Config' to restore saved configurations</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 p-6">
+          {renderActiveSection()}
+        </div>
+      </div>
+
+      {/* Save Configuration Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 w-96">
+            <h3 className="text-lg font-semibold text-white mb-4">Save Configuration</h3>
+            <input
+              type="text"
+              value={configName}
+              onChange={(e) => setConfigName(e.target.value)}
+              placeholder="Enter configuration name"
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none mb-4"
+              onKeyPress={(e) => e.key === 'Enter' && saveConfiguration()}
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveConfiguration}
+                disabled={!configName.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Load Configuration Dialog */}
+      {showLoadDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 w-96 max-h-96 overflow-y-auto">
+            <h3 className="text-lg font-semibold text-white mb-4">Load Configuration</h3>
+            {savedConfigs.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">No saved configurations</p>
+            ) : (
+              <div className="space-y-3">
+                {savedConfigs.map((config, index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-700 p-3 rounded">
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{config.name}</div>
+                      <div className="text-sm text-gray-400">
+                        {config.nodes} nodes • {config.serverModel.toUpperCase()} • {new Date(config.timestamp).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => loadConfiguration(config)}
+                        className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={() => deleteConfiguration(index)}
+                        className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowLoadDialog(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AzureLocalSizer;
